@@ -1,0 +1,159 @@
+---
+title: "Assignment 3"
+author: "marcellinus jerricho"
+date: "10/17/2021"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+## Question 1
+Using the lemmings population model (the logistic model), you will investigate how the distribution of $X$ due to uncertainty in initial condition depends on time. Create a code that takes a set of initial $X0$ values within some small interval (often called the error bar) and evolves these values in time.
+```{r}
+# function that calculate the X after n iteration from a set of initial values
+X_over_n <- function(r, set_X_0, n){
+  # initialize the set 
+  set_X_n <- set_X_0
+  # update the set 
+  for (i in 1:n) {
+    set_X_n <- r * set_X_n * (1 - set_X_n)
+  }
+  
+  return(set_X_n)
+}
+
+```
+Then, we write a function takes in the set $X$ and returns the probability distribution of set $X$ into 15 bins. 
+```{r}
+# write a function that returns the probability distribution
+prob_dist <- function(set_X){
+  # get the range
+  min_X_n <- min(set_X) - 0.003
+  max_X_n <- max(set_X) + 0.003
+  
+  # get the bins
+  BinNum <- 15
+  BinSize <- (max_X_n - min_X_n) / BinNum
+  BinCounts <- matrix(min_X_n, max_X_n, BinNum)
+  
+  # calculate the count for each bin
+  for (i in 1:BinNum){ 
+    llim<- (i-1)*BinSize + min_X_n
+    ulim<- i*BinSize + min_X_n
+    logicalvector <- (set_X>=llim & set_X < ulim)
+    BinCounts[i] <- sum(as.integer(logicalvector))
+  }
+  
+  # get the bin centres and probability density
+  BinCentres <- min_X_n + seq(BinNum)*BinSize - BinSize/2
+  Probability_density <- BinCounts/length(set_X)
+  data.frame(BinCentres = BinCentres, Probability_density = Probability_density)
+  
+  # return the probability distribution
+  return(data.frame(BinCentres = BinCentres, 
+                    Probability_density = Probability_density))
+}
+```
+Plot the final *probability distribution* of $X_n$ for $n = 10, 25, 50$ (that is, the population after 10 steps, 25 steps, and 50 steps). Choosing a chaotic $r$ value in the range $r > 3.6$. I realize that the $hist()$ function does not allow me to use the $breaks$ parameter if I want to have the probability as the y-axis. Hence, I use the bin function to show the probability distribution. For each value of $n$, I also include a histogram of the count of final distribution of $X$ for better analysis. We first start with $n = 10$.
+```{r}
+# set the initial parameter
+initial_X0_values <- seq(from=0.50, to=0.51, length.out = 1000)
+r <- 3.7
+
+# for n = 10
+n <- 10
+Xn_values <- X_over_n(r, initial_X0_values, n)
+Xn_prob_dist <- prob_dist(Xn_values)
+plot(Xn_prob_dist$BinCentres, Xn_prob_dist$Probability_density,
+     main = "Probability Distribution of Final X after 10 steps",
+     xlim = c(min(Xn_prob_dist$BinCentres) - 0.003, 
+              max(Xn_prob_dist$BinCentres) + 0.003), 
+     ylim = c(min(Xn_prob_dist$Probability_density), 
+              max(Xn_prob_dist$Probability_density)), 
+      xlab="Value of X", ylab="Probability", type="o",lwd=2)
+
+hist(Xn_values, probability = TRUE, 
+     breaks = seq(min(Xn_values) - 0.003, max(Xn_values) + 0.003, 0.001),
+     main = "Count Distribution of Final X after 10 steps",
+     ylab = "Count",
+     xlab = "value of X")
+
+```
+Then, we look at the case when $n = 20$.
+```{r}
+# for n = 20
+n <- 20
+Xn_values <- X_over_n(r, initial_X0_values, n)
+Xn_prob_dist <- prob_dist(Xn_values)
+plot(Xn_prob_dist$BinCentres, Xn_prob_dist$Probability_density,
+     main = "Probability Distribution of Final X after 20 steps",
+     xlim = c(min(Xn_prob_dist$BinCentres) - 0.003, 
+              max(Xn_prob_dist$BinCentres) + 0.003), 
+     ylim = c(min(Xn_prob_dist$Probability_density), 
+              max(Xn_prob_dist$Probability_density)), 
+      xlab="Value of X", ylab="Probability", type="o",lwd=2)
+
+hist(Xn_values, probability = TRUE, 
+     breaks = seq(min(Xn_values) - 0.03, max(Xn_values) + 0.03, 0.02),
+     main = "Count Distribution of Final X after 20 steps",
+     ylab = "Count",
+     xlab = "value of X")
+```
+Lastly, we look at the case when $n = 25$.
+```{r}
+# for n = 25
+n <- 25
+Xn_values <- X_over_n(r, initial_X0_values, n)
+Xn_prob_dist <- prob_dist(Xn_values)
+plot(Xn_prob_dist$BinCentres, Xn_prob_dist$Probability_density,
+     main = "Probability Distribution of Final X after 25 steps",
+     xlim = c(min(Xn_prob_dist$BinCentres) - 0.003, 
+              max(Xn_prob_dist$BinCentres) + 0.003), 
+     ylim = c(min(Xn_prob_dist$Probability_density), 
+              max(Xn_prob_dist$Probability_density)), 
+      xlab="Value of X", ylab="Probability", type="o",lwd=2)
+
+hist(Xn_values, probability = TRUE, 
+     breaks = seq(min(Xn_values) - 0.03, max(Xn_values) + 0.03, 0.02),
+     main = "Count Distribution of Final X after 25 steps",
+     ylab = "Count",
+     xlab = "value of X")
+```
+
+## Discussion
+Discuss the following questions based on your observations:
+
+(i) How does the probability distribution change with time?
+
+Over time, the spread of the distribution of final value of $X$ increases. We start with values of $X$ near $0.7$ for lower $n$ to values of $X$ being spread over $0.2$ to $0.9$.
+
+Over time, there is also a shift in the probability distribution of final value of $X$, in which there are lower values of $X$ for lower $n$, but more higher values of $X$ for higher $n$. This is shown from how the mode shifts from the left in lower values of $n$ to the right in higher values of $n$.
+
+(iia) Based on the change in the probability distribution with time, how does the predictability of population change with time? 
+
+The predictability of population decreases with time, as the probability distribution of final value of $X$ gets more spread out. The relative probability of any value between the minimum and maximum value of $X$ final also gets more similar, hence it is very difficult to predict the final value of $X$ over a longer period of time.
+
+(iib) Based on your observation, write a couple of sentences commenting on the uncertainties of long-term climate prediction.
+
+Based on my observation, it is very difficult to predict the climate over a long-term period of time. As the duration increases, the impact of the uncertainty on the calculation of the climate gets amplified. The probability distribution of the final calculation climate prediction gets more spread out over a larger possibility, thus making it very difficult to pinpoint a specific and definite prediction. Moreover, the shift in the mode of probability distribution over time also show as that the small uncertainties of the climate measurement and human factor make long-term climate prediction very difficult.
+
+## Question 2
+When constructing a model, it is important to keep in mind its applicability. Just because we have a climate model, it does not mean that we can answer any climate-related question. 
+
+1. What does your model do? Explain what useful information one can obtain from your model.
+
+The model takes into account the amount of radiation being received by the earth from the sun and predicts the temperature of the surface of the earth with the impact of atmosphere (built from single atmosphere in week 2 to multiple layers of atmosphere in week 9). The atmosphere reflects some of the heat reflected by the earth's surface. This keeps the heat trapped on earth's surface, which keeps it warmer than what we would expect if there were no atmosphere. By using this model, one can can change the absorptivity of the earth's surface and atmosphere to try to understand their impact on the earth's temperature better. 
+
+2. What are the relevant assumptions that the model makes? Specifically, what conscious choices did we have to make to construct the model?
+
+The model assumes that we can quantify atmosphere into distinct layers. We assume that the atmosphere mass can be split evenly top-down. In actual fact, the atmosphere is gradually denser at the bottom than at the top. We deliberately assume that humans do not produce more heat on earth, which is not the case in real life. We made these assumptions to make our model simpler, hence easier to manage and understand. Moreover, we also decided to represent the atmosphere as layers, where they radiate and absorb heat to and from each other.
+
+3. What should one be careful about when applying this model? What are the potential misuse scenarios?
+
+We should be careful about the simplicity of the model. We are excluding many other factors that affect earth's surface temperature, such as human activity (combustion, etc.). Our model assumes that the temperature of the earth would reach an equilibrium, as the source of heat (sun) and the property of the atmosphere would remain constant. However, this is not the case in real life, as humans continuously generate greenhouse gases to the atmosphere that change the absorptivity of the atmosphere. This opens up opportunity for people to exploit the model and argue that climate change does not exist.

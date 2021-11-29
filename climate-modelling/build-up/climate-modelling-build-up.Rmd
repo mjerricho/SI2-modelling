@@ -1,0 +1,266 @@
+---
+title: "First steps of climate modelling"
+#author: "Matt Stamps"
+#date: "9/1/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this activity, we will go through the very first steps of climate modelling by building our very own model for the temperature of the surface of the Earth and various layers of its atmosphere. Following the development cycle for modeling, we will start with a simplified initial setup and incrementally add more features to make the model more realistic.  
+
+# Getting Started
+
+In your Week 2 Monday CE seminar, you should have discussed some of the important quantities and mechanisms that influence the temperatures of the Earth's surface and atmosphere. \begin{itemize} \item The Sun's radiative power incident on Earth: $R_{SUN} = 342 \ \text{W}/\text{m}^2$ \item The observed albedo of Earth's surface: $\alpha = 0.3$ (value between $0$ and $1$) \item Stefan's Law: The relationship between the power radiated per unit surface area of an object, $R_{OBJ} \ (\text{W}/\text{m}^2)$, and the temperature of the object, $T_{OBJ} \ (\text{K})$, is given by $$R_{OBJ} = \sigma \ T_{OBJ}^4$$ where $\sigma = 5.67 \times 10^{-8} \ \text{W}/\text{m}^2/\text{K}^4$ is the Stefan-Boltzmann constant. \item Energy Balance Equation: Every object is assumed to be at thermal equilibrium, meaning that the total power absorbed per unit surface area by an object, $A_{OBJ} \ (\text{W}/\text{m}^2)$, is equal to the total power radiated per unit surface area by the object, $R_{OBJ} \ (\text{W}/\text{m}^2)$.  Mathematically, $$R_{OBJ} = A_{OBJ}.$$  \end{itemize}  With these components, we can construct our first iteration of an Energy Balance Model (EBM) for the average temperature of the surface of the Earth.
+
+## 1st Iteration: No albedo, no atmosphere
+
+For the sake of simplicity, let's assume that the Earth has no atmosphere and no albedo.  In this case, the Earth's surface absorbes all of the Sun's radiative power (incident on Earth), which means that $$T_{SURF} \underbrace{=}_{\text{Stefan's Law}} \sqrt[4]{R_{SURF}/\sigma} \underbrace{=}_{\text{Energy Balance}} \sqrt[4]{A_{SURF}/\sigma} \underbrace{=}_{\text{Assumption}} \sqrt[4]{R_{SUN}/\sigma}.$$ Let's see how this looks in R:
+
+```{r}
+# Relevant parameters
+R_SUN <- 342 #W/m^2
+sigma <- 5.67e-8 #W/m^2/K^4
+
+# Our assumption that the Earth's surface  
+# absorbes all of the Sun's radiation
+A_SURF <- R_SUN
+
+# Energy Balance Equation
+R_SURF <- A_SURF
+
+# Stefan's Law
+T_SURF <- (R_SURF/sigma)^(1/4)
+
+# Convert temperature from Kelvin to Celsius
+T_SURF <- T_SURF - 273
+
+print(T_SURF)
+```
+
+
+## 2nd Iteration: With albedo, no atmosphere
+
+Now let's assume that the Earth has albedo, but still no atmosphere.  In this case, the Earth's surface absorbes only a portion of the Sun's radiative power (incident on Earth), specifically $$A_{SURF} = (1-\alpha) R_{SUN},$$ which means that $$T_{SURF} \underbrace{=}_{\text{Stefan's Law}} \sqrt[4]{R_{SURF}/\sigma} \underbrace{=}_{\text{Energy Balance}} \sqrt[4]{A_{SURF}/\sigma} \underbrace{=}_{\text{Revised Assumption}} \sqrt[4]{(1-\alpha)R_{SUN}/\sigma}.$$ Note that only the last equality is different from the first iteration, so we should be able to recycle a lot of our R code:
+
+```{r}
+# Relevant parameters
+R_SUN <- 342 #W/m^2
+sigma <- 5.67e-8 #W/m^2/K^4
+alpha <- 0.3 #arbitrary units
+
+# Our assumption that the Earth's surface  
+# absorbes a portion of the Sun's radiation
+A_SURF <- (1 - alpha) * R_SUN
+
+# Energy Balance Equation
+R_SURF <- A_SURF
+
+# Stefan's Law
+T_SURF <- (R_SURF/sigma)^(1/4)
+
+# Convert temperature from Kelvin to Celsius
+T_SURF <- T_SURF - 273
+
+print(T_SURF)
+```
+
+To validate this iteration, we can check how the average temperature of the Earth's surface varies with changes in albedo.
+
+```{r}
+# Relevant parameters with a range of values for alpha
+R_SUN <- 342 #W/m^2
+sigma <- 5.67e-8 #W/m^2/K^4
+alpha_RANGE <- seq(0,1,length.out=100) #arbitrary units
+
+# Our assumption that the Earth's surface  
+# absorbes a portion of the Sun's radiation
+A_SURF <- (1 - alpha_RANGE) * R_SUN
+
+# Energy Balance Equation
+R_SURF <- A_SURF
+
+# Stefan's Law
+T_SURF <- (R_SURF/sigma)^(1/4)
+
+# Convert temperature from Kelvin to Celsius
+T_SURF <- T_SURF - 273
+
+plot(alpha_RANGE,T_SURF,type="l",ylim=c(min(T_SURF),max(T_SURF)),
+     col="blue",xlab="Albedo",ylab="Surface Temp (Celsius)")
+```
+
+
+## Absorptivity, Emissivity, and the Greenhouse Effect
+
+Both of the iterations so far have predicted an average temperature that is much cooler than the average temperature that has been calculated from physical measurements ($\approx 15^\circ$C).  This is understandable since we haven't included the green house effect of the atmosphere.  To add the green house effect of the atmosphere into our model, we need the notions of absorptivity and emissivity.  In the first two iterations of our model, we made an implicit assumption that the Earth is an *ideal black body*, which means it absorbes (and emits) $100\%$ of the radiation it encounters.  The atmosphere, on the other hand, is a *nonideal black body*; it only absorbs (and emits) a fraction of the radiation it encounters.  The fraction of radiation an object absorbs is called its *absorptivity* and the fraction of radiation it emits is called its *emissivity*.  In thermal equilibrium, the absorptivity and emissivity of an object are equal, so we will denote them with a single parameter $\epsilon_{OBJ}$.  With this notation, Stefan's Law states that $$R_{OBJ} = \epsilon_{OBJ} \sigma T_{OBJ}^4.$$ In Week 2, you probably used $\epsilon_{ATM} = 0.8$ for the atmosphere of the Earth.    
+
+## 3rd Iteration: With albedo, single layer of atmosphere
+
+Now let's assume that the Earth has albedo and single layer of atmosphere.  In this case, the Earth's surface absorbes a portion of the Sun's radiative power (incident on Earth), but also a portion of radiation emitted by the atmosphere as illustrated in this Figure 1.
+
+Specifically, \begin{equation} A_{SURF} = (1-\alpha) R_{SUN} + R_{ATM} \end{equation} where $R_{ATM}$ is the amount of the radiation from the atmosphere directed back down to Earth.  We also assume that the atmosphere does not absorb any of the radiation from the sun (since the wavelengths of that radiation are so small), so the only radiation absorbed by the atmosphere comes from the surface of the Earth.  Mathematically, this is \begin{equation} A_{ATM} = \epsilon * R_{SURF}. \end{equation}  Furthermore, since the atmosphere radiates energy equally in all directions (toward and away from the Earth's surface), the amount of energy radiated by the atmosphere toward the Earth is only half of what the atmosphere absorbs.  Mathematically, \begin{equation} R_{ATM} = \frac{1}{2} * A_{ATM}. \end{equation}  Combining Equations (1) through (3) with the energy balance equation for the surface of the Earth, we get $$A_{SURF} = (1-\alpha) R_{SUN} + \frac{1}{2} \epsilon A_{SURF},$$ which we can solve for $A_{SURF}$ to get $$A_{SURF} = \frac{(1-\alpha)}{(1-\frac{1}{2}\epsilon)} R_{SUN}$$ and plug into Stefan's Law for the temperature of the Earth:   
+
+ $$T_{SURF} \underbrace{=}_{\text{Stefan's Law}} \sqrt[4]{R_{SURF}/\sigma} \underbrace{=}_{\text{Energy Balance}} \sqrt[4]{A_{SURF}/\sigma} \underbrace{=}_{\text{Above Calculations}} \sqrt[4]{\frac{(1-\alpha) R_{SUN} }{(1-\frac{1}{2}\epsilon) \sigma}}.$$ 
+
+Let's update our R code:
+
+```{r}
+# Relevant parameters
+R_SUN <- 342 #W/m^2
+sigma <- 5.67e-8 #W/m^2/K^4
+alpha <- 0.3 #fraction
+epsilon <- 0.8 #fraction
+
+# Our assumption that the Earth's surface  
+# absorbes a portion of the Sun's radiation
+# plus some of the radiation emitted by the
+# atmosphere back down to Earth.
+A_SURF <- (1 - alpha) / (1 - 0.5 * epsilon) * R_SUN
+
+# Energy Balance Equation
+R_SURF <- A_SURF
+
+# Stefan's Law
+T_SURF <- (R_SURF/sigma)^(1/4)
+
+# Convert temperature from Kelvin to Celsius
+T_SURF <- T_SURF - 273
+
+print(T_SURF)
+```
+\newpage
+
+# Let's Get Moving
+
+So far, our model is a "static" model assuming thermal equilibrium. Let us remove our assumption that the Earth's climate is in thermal equilibrium and use our new understanding of heat capacity to explore how a climate system that is out of thermal equilibrium will change to (re)attain thermal equilibrium.  
+
+## Heat Capacity
+
+Recall that the *heat capacity* of an object is the amount of heat required to raise temperature of the object by $1^\circ$C and the *specific heat* of a substance is the amount of energy required to raise the temperature of $1$ gram of the substance by $1^\circ$C.  For today's seminar, you were asked to estimate the average heat capacities of the ocean and atmosphere below (resp. above) a one square meter patch of the Earth's surface.  
+
+For the average heat capacity of the ocean, one can look up the \begin{itemize} \item specific heat of water: $c_{water} = 4200$ J/kg/K, \item density of water: $\rho_{water} = 1000$ kg/m$^3$, \item average depth of the oceans: $d_{ocean} \approx 4000$ m. \end{itemize}
+
+Combining these, we get that the average heat capacity of the ocean below a one square meter patch of the Earth's surface is $$C_{ocean} = c_{water} \times \rho_{water} \times d_{ocean} \approx 4200 \text{J/kg/K} \times 1000 \text{kg/m}^3 \times 4000 \text{m} = 1.68 \times 10^{10} \text{J/m}^2\text{/K}.$$
+
+Similarly, for the average heat capacity of the ocean, one can look up the \begin{itemize} \item specific heat of air: $c_{air} = 1000$ J/kg/K, \item density of water: $\rho_{air} = 1.2$ kg/m$^3$, \item average height of the troposphere: $h_{atm} \approx 12000$ m. \end{itemize}
+
+Combining these, we get that the average heat capacity of the atmosphere above a one square meter patch of the Earth's surface is $$C_{atm} = c_{air} \times \rho_{air} \times h_{atm} \approx 1000 \text{J/kg/K} \times 1.2 \text{kg/m}^3 \times 12000 \text{m} = 1.4 \times 10^{7} \text{J/m}^2\text{/K}.$$
+
+## Updating the Model
+
+So how exactly does the concept of heat capacity help us improve our model?  Well, we know that the change in temperature (K) of an object is equal to the change in energy (J) divided by heat capacity of the object (J/K).  That means if we know the rate of change of the net amount of energy being absorbed by an object, we can calculate the rate of change of its temperature. Mathematically, $$\dot{T}_{obj} = \frac{A_{obj}-R_{obj}}{C_{obj}}$$ where $\dot{T}_{obj}$ is the rate of change of the temperature of the object (K/s), $A_{obj}$ is the amount of radiation absorbed by the object (J/s), $R_{obj}$ is the amount of radiation emitted by the object (J/s) and $C_{obj}$ is the heat capacity of the object (J/K).  
+
+Let's apply this to the single-layer atmosphere model. \smallskip  
+
+We know the following formulas from Figure 1: \begin{align*} A_{surf} &= (1-\alpha)R_{sun} + \epsilon \sigma T_{atm}^4 \\[0.5em] R_{surf} &= \sigma T_{surf}^4 \\[0.5em] A_{atm} &= \epsilon \sigma T_{surf}^4, \\[0.5em] R_{atm} &= 2 \epsilon \sigma T_{atm}^4 \end{align*} and we just calculated $C_{atm} = 1.4 \times 10^7$ J/m$^2$/K.  To estimate $C_{surf}$, let's suppose the heat capacity of land is negligible compared to the ocean. (Why is this a reasonable assumption?)  Since the ocean covers roughly $70\%$ of the Earth's surface, let's use $C_{surf} \approx 0.7 \times C_{ocean} \approx 0.7 \times 1.68 \times 10^{10} = 1.176 \times 10^{10}$ J/m$^2$/K.
+
+Combining this all together, we get the following pair of equations \begin{align} \dot{T}_{surf}(t) &= \frac{A_{surf}(t)-R_{surf}(t)}{C_{surf}} = \frac{(1-\alpha)R_{sun} + \epsilon \sigma T_{atm}(t)^4 - \sigma T_{surf}(t)^4}{C_{surf}} \\[0.5em] \dot{T}_{atm}(t) &= \frac{A_{atm}-R_{atm}}{C_{atm}} = \frac{\epsilon \sigma T_{surf}(t)^4 - 2 \epsilon \sigma T_{atm}(t)^4}{C_{atm}} \end{align}
+that express the rates of change of the temperatures of the Earth's surface and atmosphere in terms of their current temperatures and the fixed parameters $R_{sun}$, $\alpha$, $\sigma$, $\epsilon$, $C_{surf}$, and $C_{atm}$.  With this, we can employ the same strategy we used to study the long-term behavior of the rabbit and fox populations.
+
+## 4th Iteration
+
+Adapt the R code from the Rabbits & Foxes model to study the long-term behavior of the temperatures of the Earth's surface and atmosphere using Equations (1) and (2).  You will need to pick an initial set of temperatures to run the model.  Try using $T_{surf}(0) = 5^{\circ}$C and $T_{atm}(0) = -20^{\circ}$C. \bigskip 
+
+```{r eval=FALSE}
+# Define a function to calculate the rates of change of the different 
+# temperatures in terms of the parameters and current temperatures.
+change_rates <- function(T_surf, T_atm, C_surf, C_atm, 
+                         R_sun, alpha, sigma, epsilon){
+
+   A_surf <- (1 - alpha) * R_sun + (epsilon * sigma * (T_atm^4))
+   R_surf <- sigma * (T_surf^4)
+   
+   A_atm <- epsilon * sigma * (T_surf^4)
+   R_atm <- 2 * epsilon * sigma * (T_atm^4)
+   
+   T_dot_surf <- (A_surf - R_surf) / C_surf
+   T_dot_atm <- (A_atm - R_atm) / C_atm
+  
+   return( c(T_dot_surf, T_dot_atm) )
+}
+
+# Set up the relevant parameters.
+R_sun <- 342 #W/m^2 or J/s/m^2
+sigma <- 5.67 * 10^(-8) #W/m^2/K^4 or J/s/m^2/K^4
+alpha <- 0.3 #fraction
+epsilon <- 0.8 #fraction
+C_surf <-  1.176 * 10^(10) #J/K
+C_atm <-  1.4 * 10^7#J/K
+
+# Set up the initial temperatures.
+T_surf_0 <- 15 #C
+T_atm_0 <- -10 #C
+
+# Set up a sequence of times to calculate the temperatures. Since the temperature 
+# of the Earth changes slowly, increment the times by weeks instead of seconds.
+num_steps <- 100000
+times_weeks <- seq(num_steps)
+
+# Since the units for the rates of change are J/s and K/s, we
+# need to express convert weeks to seconds for the calculations.
+times <- times_weeks * 60*60*24*7
+ 
+# Create dummy lists to store the temperatures over time. 
+Ts_surf <- matrix(0,1,num_steps)
+Ts_atm <- matrix(0,1,num_steps)
+
+# Insert the initial temperatures into the storage lists.
+Ts_surf[1] <- T_surf_0
+Ts_atm[1] <- T_atm_0
+
+# Iteratively fill in the temperatures in the storage lists.
+for(t in 2:num_steps){
+        
+  # Calculate the time step.
+  delta <-  times[t] - times[t-1]
+  
+  # Convert the previous temperatures from Celsius to Kelvin.
+  T_surf_K <- Ts_surf[t-1] + 273
+  T_atm_K <- Ts_atm[t-1] + 273
+  
+  # Input the previous temperatures into the change_rates function.
+  rates <- change_rates(T_surf_K, T_atm_K, C_surf, C_atm, 
+                        R_sun, alpha, sigma, epsilon)
+  
+  # Calculate the current temperatures using the previous temperatures,
+  # time step, and rates of change.
+  Ts_surf[t] <- Ts_surf[t-1] + delta * rates[1]
+  Ts_atm[t] <- Ts_atm[t-1] + delta * rates[2]
+}
+
+# Plot the results.
+plot(times_weeks,Ts_surf,type="l",ylim=c(-50,50),col="red",lwd=2,
+     xlab="Time (Weeks)",ylab="Temperature (Celsius)")
+lines(times_weeks,Ts_atm,type="l",col="blue",lwd=2)
+grid()
+
+# Print the final temperatures.
+message(sprintf("Temperature of Surface (in deg Cel): %3.1f",Ts_surf[num_steps]))
+message(sprintf("Temperature of Atmosphere (in deg Cel): %3.1f",Ts_atm[num_steps]))
+```
+\medskip
+Before moving on, you should consider the following questions:
+
+\begin{enumerate} \item How do the predicted equilibrium temperatures from this iteration compare to the predictions from the previous iteration? \item How do the initial temperatures of the surface and atmosphere affect the predicted equilibrium temperatures? \item How do the values of the heat capacities affect the predicted equilibrium temperatures?
+\end{enumerate}
+
+
+## Adding More Layers of Atmosphere
+
+In reality, we know that the composition and temperature of the atmosphere varies with height.  To improve our model, we would like to include multiple layers of atmosphere, each with its own emissivity/absorptivity and temperature.  We can extend our single-layer atmosphere model using the diagram in Figure 2.
+
+For a 2-layer atmosphere model, the amount of radiation absorbed by the surface of the Earth is equal to the portion of radiation of the Sun that is not reflected away plus the amount of radiation emitted downward by the lower layer of atmosphere plus the portion of radiation emitted downward by the upper layer of the atmosphere that is not absorbed by the lower layer of atmosphere on its way down to the surface.  Mathematically, this looks like \begin{equation*} A_{SURF} = (1-\alpha) R_{SUN} + R_{ATM1} + (1-\epsilon_1) R_{ATM2}. \end{equation*} Similarly, the amount of radiation absorbed by the lower layer of the atmosphere is equal to a portion of the radiation emitted by the Earth's surface plus a portion of the radiation emitted downward by the upper layer of atmosphere.  Mathematically, this looks like \begin{equation*} A_{ATM1} = \epsilon_1 R_{SURF} + \epsilon_1 R_{ATM2}. \end{equation*}  Finally, the amount of radiation absorbed by the upper layer of the atmosphere is equal to a portion of the radiation emitted upward by the lower layer of atmosphere plus a portion of the radiation from the Earth's surface that did not get absorbed by the lower layer of atmosphere.  Mathematically, this looks like \begin{equation*} A_{ATM2} = \epsilon_2 R_{ATM1} + \epsilon_2 (1-\epsilon_1) R_{SURF}.\end{equation*}  From here, we can apply the energy balance equations for the Earth's surface ($R_{SURF} = A_{SURF}$) and each layer of atmosphere ($2R_{ATM1} = A_{ATM1}$ and $2R_{ATM2} = A_{ATM2}$, since each layer of atmosphere emits radiation up and down) to get the following system of equations:
+\begin{align*} R_{SURF} &= (1-\alpha) R_{SUN} + R_{ATM1} + (1-\epsilon_1) R_{ATM2} \\[0.5em] 
+ 2R_{ATM1} &= \epsilon_1 R_{SURF} + \epsilon_1 R_{ATM2} \\[0.5em]
+ 2R_{ATM2} &= \epsilon_2 R_{ATM1} + \epsilon_2 (1-\epsilon_1) R_{SURF}.
+ \end{align*} 
+Applying Stefan's Law to these equations yields:
+\begin{align*} \sigma T_{SURF}^4 &= (1-\alpha) R_{SUN} + \epsilon_1 \sigma T_{ATM1}^4 + (1-\epsilon_1) \epsilon_2 \sigma T_{ATM2}^4 \\[0.5em] 
+ 2 \epsilon_1 \sigma T_{ATM1}^4 &= \epsilon_1 \sigma T_{SURF}^4 + \epsilon_1 \epsilon_2 \sigma T_{ATM2}^4 \\[0.5em]
+ 2 \epsilon_2 \sigma T_{ATM2}^4 &= \epsilon_2 \epsilon_1 \sigma T_{ATM1}^4 + \epsilon_2 (1-\epsilon_1) \sigma T_{SURF}^4.
+ \end{align*} 
+Think about how you would implement the two layer atmosphere model. How many variables are there? And how many equations? We will continue with this next class.
+

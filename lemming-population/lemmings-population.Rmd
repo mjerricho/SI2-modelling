@@ -1,0 +1,188 @@
+---
+title: "The Sequel to the Lemmings' Story"
+output: 
+  pdf_document:
+    latex_engine: pdflatex
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+fontfamily: palatino
+urlcolor: blue
+editor_options: 
+  chunk_output_type: console
+always_allow_html: yes  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+```
+
+From our discussions on Monday, we have learned that the lemming population exhibits chaotic behavior when $r>3.6$. In this activity, we try to see whether there is any order in the chaos. 
+
+## Exercise 1: Generating the probability distribution of $X$
+
+Your task is to calculate the probability distribution of $X$ in time (i.e. what is the proportion of time $X_n$ spends within the window $0 < X < 0.01$, $0.01 < X < 0.02$ etc.) by filling in the following code. To properly sample the probability distribution, you will have to calculate $X_n$ till $n=20000$.
+
+```{r, echo=TRUE}
+
+# function for the population iteration
+lemming_population <- function(r,X_0,n){
+  # Fill in your function written on Monday for the lemming population
+  Ls <- vector(length=n+1)
+  # initialize the initial population
+  Ls[1] <- X0
+  for (i in 2:(n + 1)) {
+    Ls[i] <- r * Ls[i - 1] * (1 - Ls[i - 1])
+  }
+  # output should be an array of n + 1 elements
+  return(Ls)
+}
+
+NumSteps <- 20000 
+r <- 3.7                 # pick a value of r (r>3.6)
+X0 <- 0.1               # pick a value of initial value X_0 
+XVec <- lemming_population(r, X0, NumSteps) # compute the lemming population
+
+BinNum <- 100         # number of bins between 0 and 1
+BinSize <- 1/BinNum   # compute the bin size
+BinCounts <-matrix(0,1,BinNum) #initialize bin counts to zero
+
+for (i in 1:BinNum){  # 
+  
+upper_limit <- BinSize * i
+lower_limit <- upper_limit - BinSize
+logicalvector <- (XVec >= lower_limit & XVec < upper_limit)
+BinCounts[i] <-  sum(as.integer(logicalvector))
+
+  # TO FILL IN: This counts the number of X values in each bin. 
+  # You may use as.integer on logicalvector, and use 
+  #'sum' on the resulting object.
+  
+}
+
+BinCentres <- seq(BinNum)*BinSize - BinSize/2 # find the centers of the bins
+Probability_density <- BinCounts/length(XVec) # compute probability density 
+plot(BinCentres,Probability_density,
+     xlim = c(0, 1), ylim = c(0, 0.1),
+     xlab="Population", ylab="Probability",
+     type="o",lwd=2)  # plot histogram
+
+```
+
+
+## Exercise 2:  Sensitivity of the probability distribution to the initial conditions
+
+Choosing $r$ in the chaotic regime $r >3.6$, plot the probability distribution of $X$ for or 3 different initial conditions $X_0$ on the same plot. Does the probability distribution (and thus the statistical quantities) depend on the values of the initial conditions?
+
+```{r}
+# writing a function to get the probability distribution
+binCount <- function(lemming_pop, BinNum) {
+  BinSize <- 1/BinNum   # compute the bin size
+  BinCounts <-matrix(0,1,BinNum) #initialize bin counts to zero
+
+  for (i in 1:BinNum){
+    upper_limit <- BinSize * i
+    lower_limit <- upper_limit - BinSize
+    logicalvector <- (lemming_pop >= lower_limit & lemming_pop < upper_limit)
+    BinCounts[i] <-  sum(as.integer(logicalvector))
+  }
+  Probability_density <- BinCounts/length(lemming_pop)
+  return(Probability_density)
+}
+
+NumSteps <- 20000 
+r <- 3.7
+BinNum <- 100       
+
+X0 <- 0.1   
+lemming_pop_1 <- lemming_population(r, X0, NumSteps)
+prob_dist_1 <- binCount(lemming_pop_1, BinNum)
+
+X0 <- 0.3  
+lemming_pop_2 <- lemming_population(r, X0, NumSteps)
+prob_dist_2 <- binCount(lemming_pop_2, BinNum)
+
+X0 <- 0.8
+lemming_pop_3 <- lemming_population(r, X0, NumSteps)
+prob_dist_3 <- binCount(lemming_pop_3, BinNum)
+
+
+BinCentres <- seq(BinNum)*BinSize - BinSize/2 # find the centers of the bins
+
+data_pop <- data.frame(BinCentres = BinCentres, 
+                       prob_dist_1 = prob_dist_1,
+                       prob_dist_2 = prob_dist_2,
+                       prob_dist_3 = prob_dist_3)                       
+
+data_pop %>% ggplot(aes(x = BinCentres)) +
+  geom_line(aes(y = prob_dist_1, 
+                color = "Probability distribution when X0 = 0.1")) + 
+  geom_line(aes(y = prob_dist_2, 
+                color = "Probability distribution when X0 = 0.3")) + 
+  geom_line(aes(y = prob_dist_3, 
+                color = "Probability distribution when X0 = 0.8")) + 
+  scale_color_manual("Legend", values = c("red", "blue", "green")) +
+  labs(x = "Population", 
+       y = "Probability") + 
+  ggtitle("The probability of population of lemmings") + 
+  theme(legend.position = c(.05, .95), 
+        legend.justification = c("left", "top")) + 
+  scale_x_continuous(breaks = seq(0, 1, 0.1))
+
+```
+
+
+## Exercise 3: Sensitivity of the probability distribution to the value of $r$
+
+Choose a value of $r$ slightly different from the one you chose in Exercise 2. Plot the probability distribution of $X$ for the two different values of $r$, starting from the same initial $X_0$. Is the probability distribution (and thus the statistical quantities) sensitive to the value of $r$?
+```{r}
+NumSteps <- 20000 
+X0 <- 0.2 
+BinNum <- 100 
+
+r <- 3.7
+lemming_pop_1 <- lemming_population(r, X0, NumSteps)
+prob_dist_1 <- binCount(lemming_pop_1, BinNum)
+
+r <- 3.8
+lemming_pop_2 <- lemming_population(r, X0, NumSteps)
+prob_dist_2 <- binCount(lemming_pop_2, BinNum)
+
+r <- 3.9
+lemming_pop_3 <- lemming_population(r, X0, NumSteps)
+prob_dist_3 <- binCount(lemming_pop_3, BinNum)
+
+
+BinCentres <- seq(BinNum)*BinSize - BinSize/2 # find the centers of the bins
+
+data_pop <- data.frame(BinCentres = BinCentres, 
+                       prob_dist_1 = prob_dist_1,
+                       prob_dist_2 = prob_dist_2,
+                       prob_dist_3 = prob_dist_3)                       
+
+data_pop %>% ggplot(aes(x = BinCentres)) +
+  geom_line(aes(y = prob_dist_1, 
+                color = "Probability distribution when r = 3.6")) + 
+  geom_line(aes(y = prob_dist_2, 
+                color = "Probability distribution when r = 3.7")) + 
+  geom_line(aes(y = prob_dist_3, 
+                color = "Probability distribution when r = 3.8")) + 
+  scale_color_manual("Legend", values = c("red", "blue", "green")) +
+  labs(x = "Population", 
+       y = "Probability") + 
+  ggtitle("The probability of population of lemmings") + 
+  theme(legend.position = c(.05, .95), 
+        legend.justification = c("left", "top")) + 
+  scale_x_continuous(breaks = seq(0, 1, 0.1))
+
+```
+
+
+## Exercise 4: Work out the long-time average of $X$
+
+On Monday, we saw there were different behaviors of $X$ in the limit of long time-settling to stable fixed points, period-2 and period-4 cycles, and finally non-periodic chaotic motion.
+
+How does the average value of $X$ over long times varies? Plot the long-time average of $X$ vs.$r$. (i.e. take the values $X_{101}, \cdots, X_{200}$ for each $r$ and work out their average, and plot these averages against $r$).  See if the long-time average of $X$ varies smoothly with each $r$. 

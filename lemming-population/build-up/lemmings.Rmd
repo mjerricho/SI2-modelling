@@ -1,0 +1,250 @@
+---
+title: "lemmings"
+author: "marcellinus jerricho"
+date: "10/4/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("ggplot2")
+library("dplyr")
+```
+
+## Exercise 1
+
+```{r exercise_1}
+lemming_population <- function(r, X0, n) {
+  Ls <- vector(length=n+1)
+  # initialize the initial population
+  Ls[1] <- X0
+  for (i in 2:(n + 1)) {
+    Ls[i] <- r * Ls[i - 1] * (1 - Ls[i - 1])
+  }
+  # output should be an array of n + 1 elements
+  return(Ls)
+}
+```
+
+## Plotting graphs
+
+```{r}
+# 0 < r < 1
+r <- 0.5
+n <- 100
+times <- seq(0, n)
+
+X0 <- 0.1
+
+lem_pop_1 <- lemming_population(r, X0, n)
+
+X0 <- 0.5
+
+lem_pop_2 <- lemming_population(r, X0, n)
+
+X0 <- 0.8
+
+lem_pop_3 <- lemming_population(r, X0, n)
+
+plot(times, lem_pop_1, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "Lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_1)),
+     main = "Lemming population over time when X0 = 20")
+
+plot(times, lem_pop_2, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_2)),
+     main = "Lemming population over time when X0 = 5")
+
+plot(times, lem_pop_3, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_3)),
+     main = "Lemming population over time when X0 = 1")
+
+```
+
+```{r}
+# 1 < r < 3
+r <- 2
+n <- 100
+times <- seq(0, n)
+
+X0 <- 0.1
+
+lem_pop_1 <- lemming_population(r, X0, n)
+
+X0 <- 0.5
+
+lem_pop_2 <- lemming_population(r, X0, n)
+
+X0 <- 0.8
+
+lem_pop_3 <- lemming_population(r, X0, n)
+
+plot(times, lem_pop_1, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "Lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_1)),
+     main = "Lemming population over time when X0 = 20")
+
+plot(times, lem_pop_2, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_2)),
+     main = "Lemming population over time when X0 = 5")
+
+plot(times, lem_pop_3, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_3)),
+     main = "Lemming population over time when X0 = 1")
+```
+```{r}
+# 3 < r < 3.449
+r <- 3.2
+n <- 100
+times <- seq(0, n)
+
+X0 <- 0.1
+
+lem_pop_1 <- lemming_population(r, X0, n)
+
+X0 <- 0.5
+
+lem_pop_2 <- lemming_population(r, X0, n)
+
+X0 <- 0.8
+
+lem_pop_3 <- lemming_population(r, X0, n)
+
+plot(times, lem_pop_1, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "Lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_1)),
+     main = "Lemming population over time when X0 = 20")
+
+plot(times, lem_pop_2, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_2)),
+     main = "Lemming population over time when X0 = 5")
+
+plot(times, lem_pop_3, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_3)),
+     main = "Lemming population over time when X0 = 1")
+```
+
+```{r}
+# 3.449 < r < 3.54409
+r <- 3.5
+n <- 100
+times <- seq(0, n)
+
+X0 <- 0.1
+
+lem_pop_1 <- lemming_population(r, X0, n)
+
+X0 <- 0.5
+
+lem_pop_2 <- lemming_population(r, X0, n)
+
+X0 <- 0.8
+
+lem_pop_3 <- lemming_population(r, X0, n)
+
+plot(times, lem_pop_1, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "Lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_1)),
+     main = "Lemming population over time when X0 = 20")
+
+plot(times, lem_pop_2, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_2)),
+     main = "Lemming population over time when X0 = 5")
+
+plot(times, lem_pop_3, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_3)),
+     main = "Lemming population over time when X0 = 1")
+```
+
+```{r}
+# 3.6 < r < 4
+r <- 3.8
+n <- 100
+times <- seq(0, n)
+
+X0 <- 0.1
+
+lem_pop_1 <- lemming_population(r, X0, n)
+
+X0 <- 0.5
+
+lem_pop_2 <- lemming_population(r, X0, n)
+
+X0 <- 0.8
+
+lem_pop_3 <- lemming_population(r, X0, n)
+
+plot(times, lem_pop_1, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "Lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_1)),
+     main = "Lemming population over time when X0 = 20")
+
+plot(times, lem_pop_2, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_2)),
+     main = "Lemming population over time when X0 = 5")
+
+plot(times, lem_pop_3, 
+     type = "l", col = "blue" , 
+     xlab = "Months", ylab = "lemming Population", 
+     lwd = 2, ylim = c(0, max(lem_pop_3)),
+     main = "Lemming population over time when X0 = 1")
+```
+
+## exercise 2
+checking for sensitivity to intial conditions.
+```{r}
+# 3.6 < r < 4
+r <- 3.8
+n <- 100
+times <- seq(0, n)
+X0 <- 0.1
+
+lem_pop_1 <- lemming_population(r, X0, n)
+
+X0 <- X0 + 0.001
+
+lem_pop_2 <- lemming_population(r, X0, n)
+
+data_pop <- data.frame(times = times,
+                       lem_pop_1 = lem_pop_1, 
+                       lem_pop_2 = lem_pop_2)
+
+data_pop %>% ggplot(aes(x = times)) +
+  geom_line(aes(y = lem_pop_1, 
+                color = "Lemming population 1")) + 
+  geom_line(aes(y = lem_pop_2, 
+                color = "Lemming Population 2")) + 
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(x = "Time", 
+       y = "Population") + 
+  ggtitle("Lemming population against time for subtle difference in initial population") + 
+  theme(legend.position = c(.95, .95), 
+        legend.justification = c("right", "top")) + 
+  scale_x_continuous(breaks = seq(0, n, 5)) + 
+  scale_y_continuous(breaks = seq(0, 1, 0.05))
+```
